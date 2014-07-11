@@ -6,10 +6,10 @@ import (
 )
 
 type KMDB struct {
-	Db           gorocksdb.DB
-	Options      gorocksdb.Options
-	ReadOptions  gorocksdb.ReadOptions
-	WriteOptions gorocksdb.WriteOptions
+	Db           *gorocksdb.DB
+	Options      *gorocksdb.Options
+	ReadOptions  *gorocksdb.ReadOptions
+	WriteOptions *gorocksdb.WriteOptions
 	Primary      bool
 }
 
@@ -24,11 +24,17 @@ func Open(config *Config) *KMDB {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissing(true)
 	opts.SetBlockCache(gorocksdb.NewLRUCache(3 << 30))
-	rocksdb, err := gorocksdb.OpenDb(opts, config.Store.Dir)
+	var dbDir string
+	if config.Type.Primary {
+		dbDir = config.Store.Dir + "/primary"
+	} else {
+		dbDir = config.Store.Dir + "/backup"
+	}
+	rocksdb, err := gorocksdb.OpenDb(opts, dbDir)
 	if err != nil {
 		log.Panic(err)
 	}
-	kmdb.Db = KMDB{rocksdb, opts, gorocksdb.NewDefaultReadOptions(), gorocksdb.NewDefaultWriteOptions(), true}
+	kmdb = KMDB{rocksdb, opts, gorocksdb.NewDefaultReadOptions(), gorocksdb.NewDefaultWriteOptions(), true}
 	return &kmdb
 }
 
@@ -40,7 +46,7 @@ func (self *KMDB) Get(key []byte) (*[]byte, error) {
 	slice, err := self.Db.Get(self.ReadOptions, key)
 	value := slice.Data()
 	slice.Free()
-	return value, err
+	return &value, err
 }
 
 func (self *KMDB) Del(key []byte) error {
