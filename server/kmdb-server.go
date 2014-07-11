@@ -79,7 +79,7 @@ func HandleClient(conn net.Conn) {
 		comm := km.Command{}
 		//err = json.Unmarshal(buf, &comm)
 		size, err := binary.ReadUvarint(bytes.NewBuffer(buf[:1]))
-		log.Println("Read buf size", len(buf), "proto buf length", size)
+		//log.Println("Read buf size", len(buf), "proto buf length", size)
 		if err != nil {
 			log.Println("Message size error", buf)
 			continue
@@ -107,10 +107,11 @@ func HandleOperation(conn net.Conn, comm *km.Command) {
 	case km.CommandType_GET:
 		value, err := db.Get(comm.Key)
 		result := HandleError(conn, err)
+		log.Println("Got key:", comm.Key, "value:", value, "result:", *result.Msg)
 		if err == nil {
-			result.Rst = *value
+			result.Rst = value
 		}
-		bytes, err := km.ProtobufNettyEncode(result)
+		bytes, err := km.ProtobufEncode(result)
 		if err != nil {
 			log.Println("Serlize get result error, result:", result, " error:", err)
 		}
@@ -119,16 +120,17 @@ func HandleOperation(conn net.Conn, comm *km.Command) {
 	case km.CommandType_PUT:
 		err = db.Put(comm.Key, comm.Value)
 		rst := HandleError(conn, err)
-		result, err := km.ProtobufNettyEncode(rst)
+		log.Println("Put key:", comm.Key, "value:", comm.Value, "result:", *rst.Msg)
+		result, _ := km.ProtobufEncode(rst)
 		_, err = conn.Write(result)
 	case km.CommandType_DEL:
 		err = db.Del(comm.Key)
 		rst := HandleError(conn, err)
-		bytes, err := km.ProtobufNettyEncode(rst)
+		bytes, _ := km.ProtobufEncode(rst)
 		_, err = conn.Write(bytes)
 	default:
 		result := &km.Result{Code: proto.Int(-1), Msg: proto.String("Unsupported command")}
-		bytes, err := km.ProtobufNettyEncode(result)
+		bytes, err := km.ProtobufEncode(result)
 		if err != nil {
 			log.Println("Serlize get result error, result:", result, " error:", err)
 		}
@@ -143,7 +145,7 @@ func HandleError(conn net.Conn, err error) *km.Result {
 		conn.Close()
 		return &km.Result{Code: proto.Int(1), Msg: proto.String(err.Error())}
 	} else {
-		return &km.Result{COde: proto.Int(0), Msg: proto.String("Success")}
+		return &km.Result{Code: proto.Int(0), Msg: proto.String("Success")}
 	}
 }
 

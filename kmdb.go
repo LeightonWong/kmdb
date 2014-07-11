@@ -42,11 +42,16 @@ func (self *KMDB) Put(key, value []byte) error {
 	return self.Db.Put(self.WriteOptions, key, value)
 }
 
-func (self *KMDB) Get(key []byte) (*[]byte, error) {
+func (self *KMDB) Get(key []byte) ([]byte, error) {
 	slice, err := self.Db.Get(self.ReadOptions, key)
-	value := slice.Data()
+	if err != nil {
+		log.Println("Get key:", key, "error:", err)
+	}
+	log.Println("Get key:", key, "value:", slice.Data())
+	var value []byte
+	value = append(value, slice.Data()...)
 	slice.Free()
-	return &value, err
+	return value, err
 }
 
 func (self *KMDB) Del(key []byte) error {
