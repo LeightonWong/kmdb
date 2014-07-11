@@ -119,7 +119,7 @@ func HandleOperation(conn net.Conn, comm *km.Command) {
 	case km.CommandType_PUT:
 		err = db.Put(comm.Key, comm.Value)
 		rst := HandleError(conn, err)
-		result, err := km.ProtobufNettyEncode(rst)})
+		result, err := km.ProtobufNettyEncode(rst)
 		_, err = conn.Write(result)
 	case km.CommandType_DEL:
 		err = db.Del(comm.Key)
@@ -137,13 +137,13 @@ func HandleOperation(conn net.Conn, comm *km.Command) {
 	}
 }
 
-func HandleError(conn net.Conn, err error) *km.Result{
+func HandleError(conn net.Conn, err error) *km.Result {
 	if err != nil {
 		log.Println("Conn ", conn.RemoteAddr(), " error:", err)
 		conn.Close()
-		return &km.Result{Code:proto.Int(1), Msg:proto.String(err.Error())}
-	}else{
-		return &km.Result{COde:proto.Int(0), Msg:proto.String("Success")}
+		return &km.Result{Code: proto.Int(1), Msg: proto.String(err.Error())}
+	} else {
+		return &km.Result{COde: proto.Int(0), Msg: proto.String("Success")}
 	}
 }
 
