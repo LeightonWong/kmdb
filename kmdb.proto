@@ -2,21 +2,26 @@ package kmdb;
 
 option java_package = "com.kongming.database.kmdb.protobuf";
 option java_outer_classname = "KmdbData";
-enum CommandType {
+enum Operation {
 	PUT = 0;
 	GET = 1;
 	DEL = 2;
 }
 
 message Command {
-	required CommandType type = 1;
-	required bytes key = 2;
-	optional bytes value = 3;
-	required bool sync = 4;
+	required Operation op = 1;
+	repeated bytes args = 2;
+	required bool sync = 3;
 }
 
-message Result {
-	required int32 code = 1;
-	required string msg = 2;
-	optional bytes rst = 3;
+message StatusReply {
+	required string msg = 1;
+}
+
+message ErrorReply {
+	required string msg = 1;	
+}
+
+message IntegerReply {
+	required int32 num = 1;	
 }
